@@ -10,5 +10,5 @@ RUN mvn clean package -Pproduction -DskipTests
 FROM openjdk:21-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/authentication-0.0.1.jar /app/authentication-0.0.1.jar
-EXPOSE 8080
+EXPOSE 8081
 ENTRYPOINT ["java","-jar","/app/authentication-0.0.1.jar"]
