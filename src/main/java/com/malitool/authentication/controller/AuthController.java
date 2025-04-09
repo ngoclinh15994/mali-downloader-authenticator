@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = {"https://malitool.com", "chrome-extension://*", "https://malicoder.com", "https://promptgetter.com", "http://localhost:5173", "https://portal.malitool.com"}, maxAge = 3600)
+@CrossOrigin(origins = {"https://malitool.com", "https://malicoder.com", "https://promptgetter.com", "http://localhost:5173", "https://portal.malitool.com"},
+        originPatterns = {"chrome-extension://*"}, maxAge = 3600)
 public class AuthController {
 
 
