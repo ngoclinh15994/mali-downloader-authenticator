@@ -4,7 +4,11 @@ import com.malitool.authentication.dto.ErrorResponse;
 import com.malitool.authentication.dto.LoginRequest;
 import com.malitool.authentication.dto.LoginResponse;
 import com.malitool.authentication.dto.RegisterRequest;
+import com.malitool.authentication.dto.SubscriptionDTO;
+import com.malitool.authentication.entity.User;
+import com.malitool.authentication.repository.UserRepository;
 import com.malitool.authentication.service.CustomUserDetailsService;
+import com.malitool.authentication.service.SubscriptionService;
 import com.malitool.authentication.util.JwtUtil;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -19,23 +23,29 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = {"https://malitool.com", "https://malicoder.com", "https://promptgetter.com", "http://localhost:5173", "https://portal.malitool.com"},
         originPatterns = {"chrome-extension://*"}, maxAge = 3600)
 public class AuthController {
 
-
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
+    private final SubscriptionService subscriptionService;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+                          CustomUserDetailsService customUserDetailsService, SubscriptionService subscriptionService,
+                          UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-
         this.customUserDetailsService = customUserDetailsService;
+        this.subscriptionService = subscriptionService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping(value = "/login")
@@ -45,9 +55,12 @@ public class AuthController {
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginReq.getEmail(), loginReq.getPassword()));
             String email = authentication.getName();
             String token = jwtUtil.createToken(loginReq);
-            LoginResponse loginRes = new LoginResponse(email, token);
 
-            return ResponseEntity.ok(loginRes);
+            // Lấy thông tin user để tạo subscription info
+            User user = userRepository.findByEmail(email);
+            SubscriptionDTO subscription = subscriptionService.getUserSubscription(user);
+
+            return ResponseEntity.ok(new LoginResponse(email, token, subscription));
 
         } catch (BadCredentialsException e) {
             ErrorResponse errorResponse = new ErrorResponse(
@@ -73,4 +86,32 @@ public class AuthController {
         return ResponseEntity.ok(ResponseEntity.ok().body(authentication.getPrincipal()));
     }
 
+    @PostMapping(value = "/subscription/update")
+    public ResponseEntity<?> updateSubscription(@RequestBody Map<String, Object> request) {
+        try {
+            String userEmail = (String) request.get("userEmail");
+            String planType = (String) request.get("planType");
+            Object expirationDateObj = request.get("expirationDate");
+
+            Date expirationDate = null;
+            if (expirationDateObj != null && !"null".equals(expirationDateObj.toString())) {
+                try {
+                    long timestamp = Long.parseLong(expirationDateObj.toString());
+                    expirationDate = new Date(timestamp);
+                } catch (NumberFormatException e) {
+                    // Ignore invalid date format
+                }
+            }
+
+            boolean success = subscriptionService.updateUserSubscription(userEmail, planType, expirationDate);
+
+            if (success) {
+                return ResponseEntity.ok().body("Subscription updated successfully");
+            } else {
+                return ResponseEntity.badRequest().body("Failed to update subscription");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error updating subscription: " + e.getMessage());
+        }
+    }
 }

@@ -54,7 +54,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(registerUserRequestDTO.getPassword()));
         user.setCreatedDate(new Date());
         user.setExpiredDate(DateUtils.addDays(new Date(), 7));
-        user.setStatus(UserStatus.NEW);
+        user.setStatus(UserStatus.FREE);
         return user;
     }
 
