@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Service
 public class SubscriptionService {
@@ -20,25 +21,17 @@ public class SubscriptionService {
             return null;
         }
 
-        // Xác định plan name dựa trên status
         String planName = getPlanNameByStatus(user.getStatus());
-        
-        // Xác định subscription status
         String status = user.getStatus().name();
-        
-        // Xác định start date (created date)
         Date startDate = user.getCreatedDate();
-        
-        // Plus plan không có expired date, chỉ có Free mới có thể có
-        Date endDate = null; // Luôn null vì Plus plan không có hết hạn
-        
+
         // Xác định subscription có active không
         boolean isActive = isSubscriptionActive(user);
         
         // Plus plan không có remaining days
         int remainingDays = -1; // Không có ngày hết hạn
         
-        return new SubscriptionDTO(planName, status, startDate, endDate, isActive, remainingDays);
+        return new SubscriptionDTO(planName, status, startDate, null, isActive, remainingDays);
     }
     
     /**
@@ -50,16 +43,12 @@ public class SubscriptionService {
             if (user == null) {
                 return false;
             }
-            
-            // Chỉ có Plus plan
+
+            user.setExpiredDate(null);
             if ("PLUS".equals(planType)) {
                 user.setStatus(UserStatus.PLUS);
-                // Plus plan không có kỳ hạn nên luôn set null
-                user.setExpiredDate(null);
             } else {
-                // Fallback về Free
                 user.setStatus(UserStatus.FREE);
-                user.setExpiredDate(null);
             }
             
             userRepository.save(user);
@@ -71,11 +60,10 @@ public class SubscriptionService {
     }
     
     private String getPlanNameByStatus(UserStatus userStatus) {
-        switch (userStatus) {
-            case PLUS: return "Plus";
-            case FREE: return "Free";
-            default: return "Free";
+        if (Objects.requireNonNull(userStatus) == UserStatus.PLUS) {
+            return "Plus";
         }
+        return "Free";
     }
     
     private boolean isSubscriptionActive(User user) {
@@ -90,10 +78,5 @@ public class SubscriptionService {
         }
         
         return false;
-    }
-    
-    private int calculateRemainingDays(Date endDate) {
-        // Không có remaining days vì Plus plan không có hết hạn
-        return -1; // Luôn trả về -1 (unlimited)
     }
 }
