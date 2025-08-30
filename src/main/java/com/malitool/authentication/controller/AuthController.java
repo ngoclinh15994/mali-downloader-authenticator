@@ -82,8 +82,21 @@ public class AuthController {
 
     @PostMapping(value = "/verifyToken")
     public ResponseEntity<?> verifyToken() {
-        UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return ResponseEntity.ok(ResponseEntity.ok().body(authentication.getPrincipal()));
+        try {
+            UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            
+            // Lấy thông tin user đầy đủ từ database
+            User user = userRepository.findByEmail(email);
+            if (user != null) {
+                SubscriptionDTO subscription = subscriptionService.getUserSubscription(user);
+                return ResponseEntity.ok(new LoginResponse(email, null, subscription));
+            } else {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error verifying token: " + e.getMessage());
+        }
     }
 
     @PostMapping(value = "/subscription/update")
