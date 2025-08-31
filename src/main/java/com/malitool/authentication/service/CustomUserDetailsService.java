@@ -4,7 +4,6 @@ import com.malitool.authentication.dto.RegisterRequest;
 import com.malitool.authentication.entity.User;
 import com.malitool.authentication.entity.enums.UserStatus;
 import com.malitool.authentication.repository.UserRepository;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -53,7 +52,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.setUsername(registerUserRequestDTO.getUsername());
         user.setPassword(passwordEncoder.encode(registerUserRequestDTO.getPassword()));
         user.setCreatedDate(new Date());
-        user.setExpiredDate(DateUtils.addDays(new Date(), 7));
         user.setStatus(UserStatus.FREE);
         return user;
     }

@@ -44,7 +44,6 @@ public class SubscriptionService {
                 return false;
             }
 
-            user.setExpiredDate(null);
             if ("PLUS".equals(planType)) {
                 user.setStatus(UserStatus.PLUS);
             } else {

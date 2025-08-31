@@ -30,9 +30,6 @@ public class User {
     private UserStatus status;
 
     @Column
-    private Date expiredDate;
-
-    @Column
     private Date createdDate;
 
     public String getUuid() {
@@ -57,14 +54,6 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Date getExpiredDate() {
-        return expiredDate;
-    }
-
-    public void setExpiredDate(Date expiredDate) {
-        this.expiredDate = expiredDate;
     }
 
     public Date getCreatedDate() {
