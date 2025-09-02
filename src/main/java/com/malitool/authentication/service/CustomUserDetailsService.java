@@ -52,7 +52,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.setUsername(registerUserRequestDTO.getUsername());
         user.setPassword(passwordEncoder.encode(registerUserRequestDTO.getPassword()));
         user.setCreatedDate(new Date());
-        user.setStatus(UserStatus.FREE);
+        user.setStatus(UserStatus.ACTIVE);
         return user;
     }
 
