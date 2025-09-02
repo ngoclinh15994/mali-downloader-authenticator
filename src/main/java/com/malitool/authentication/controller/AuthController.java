@@ -75,46 +75,48 @@ public class AuthController {
 
     @PostMapping(value = "/verifyToken")
     public ResponseEntity<?> verifyToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: missing or invalid token");
+        }
+
         try {
-            UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();
-            
-            // Lấy thông tin user đầy đủ từ database
             User user = userRepository.findByEmail(email);
             if (user != null) {
                 return ResponseEntity.ok(new LoginResponse(email, null));
             } else {
-                return ResponseEntity.badRequest().body("User not found");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error verifying token: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error verifying token: " + e.getMessage());
         }
     }
 
     @GetMapping(value = "/profile")
     public ResponseEntity<?> getProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: missing or invalid token");
+        }
+
         try {
-            UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();
-            
-            // Lấy thông tin user đầy đủ từ database
             User user = userRepository.findByEmail(email);
             if (user != null) {
-                // Tạo response object với thông tin chi tiết
                 Map<String, Object> profile = Map.of(
-                    "email", user.getEmail(),
-                    "username", user.getUsername(),
-                    "phoneNumber", user.getPhoneNumber(),
-                    "status", user.getStatus(),
-                    "createdDate", user.getCreatedDate()
+                        "email", user.getEmail(),
+                        "username", user.getUsername(),
+                        "phoneNumber", user.getPhoneNumber(),
+                        "status", user.getStatus(),
+                        "createdDate", user.getCreatedDate()
                 );
-                
                 return ResponseEntity.ok(profile);
             } else {
-                return ResponseEntity.badRequest().body("User not found");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error getting profile: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error getting profile: " + e.getMessage());
         }
     }
 
